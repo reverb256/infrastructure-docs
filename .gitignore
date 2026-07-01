@@ -1,0 +1,11 @@
+# Logs
+*.log
+
+# Temp files
+*.tmp
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
