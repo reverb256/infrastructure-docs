@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NixOS K3s AI Infrastructure</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #020617; color: #e2e8f0; font-family: 'JetBrains Mono', monospace; min-height: 100vh; }
+  .container { max-width: 1400px; margin: 0 auto; padding: 24px 32px; }
+  .header { text-align: center; padding: 32px 0 24px; border-bottom: 1px solid #1e293b; margin-bottom: 32px; }
+  .header h1 { font-size: 22px; font-weight: 700; color: #f1f5f9; letter-spacing: -0.5px; }
+  .header .subtitle { font-size: 11px; color: #64748b; margin-top: 6px; }
+  .pulse-dot { display: inline-block; width: 8px; height: 8px; background: #34d399; border-radius: 50%; margin-right: 8px; animation: pulse 2s ease-in-out infinite; vertical-align: middle; }
+  @keyframes pulse { 0%,100% { opacity: 1; box-shadow: 0 0 0 0 rgba(52,211,153,0.4); } 50% { opacity: 0.7; box-shadow: 0 0 0 6px rgba(52,211,153,0); } }
+  .diagram-card { background: #0f172a; border: 1px solid #1e293b; border-radius: 12px; padding: 24px; margin-bottom: 32px; overflow-x: auto; }
+  .cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 32px; }
+  .card { background: #0f172a; border: 1px solid #1e293b; border-radius: 8px; padding: 20px; }
+  .card-header { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
+  .card-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .card h3 { font-size: 12px; font-weight: 600; color: #e2e8f0; }
+  .card ul { list-style: none; padding: 0; }
+  .card li { font-size: 10px; color: #94a3b8; padding: 3px 0; line-height: 1.5; }
+  .card li strong { color: #cbd5e1; }
+  .footer { text-align: center; font-size: 9px; color: #475569; padding: 16px 0; border-top: 1px solid #1e293b; }
+  .section-label { font-size: 10px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; color: #475569; margin-bottom: 8px; }
+</style>
+</head>
+<body>
+<div class="container">
+
+<div class="header">
+  <h1><span class="pulse-dot"></span>NixOS K3s AI Infrastructure</h1>
+  <div class="subtitle">4 Nodes &bull; 34 Pods &bull; 7 GPUs &bull; K3s v1.34.5+k3s1 &bull; NixOS 26.05</div>
+</div>
+
+<div class="diagram-card">
+<svg viewBox="0 0 1300 960" xmlns="http://www.w3.org/2000/svg" font-family="'JetBrains Mono', monospace">
+  <defs>
+    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#1e293b" stroke-width="0.5"/>
+    </pattern>
+    <marker id="arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#475569"/>
+    </marker>
+    <marker id="arrow-green" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#34d399"/>
+    </marker>
+    <marker id="arrow-cyan" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#22d3ee"/>
+    </marker>
+    <marker id="arrow-violet" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#a78bfa"/>
+    </marker>
+    <marker id="arrow-rose" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#fb7185"/>
+    </marker>
+    <marker id="arrow-orange" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#fb923c"/>
+    </marker>
+    <marker id="arrow-amber" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#fbbf24"/>
+    </marker>
+  </defs>
+
+  <!-- Background grid -->
+  <rect width="1300" height="960" fill="url(#grid)"/>
+
+  <!-- ============= CONNECTION ARROWS (drawn first, behind boxes) ============= -->
+
+  <!-- Pi → SearXNG -->
+  <line x1="120" y1="135" x2="120" y2="190" stroke="#fb923c" stroke-width="1.2" stroke-dasharray="5,3" marker-end="url(#arrow-orange)"/>
+  <text x="130" y="168" fill="#fb923c" font-size="7">web search</text>
+
+  <!-- Pi → Llama endpoints -->
+  <line x1="195" y1="100" x2="420" y2="100" stroke="#22d3ee" stroke-width="1.2" stroke-dasharray="5,3" marker-end="url(#arrow-cyan)"/>
+  <text x="280" y="93" fill="#22d3ee" font-size="7">/v1 completions</text>
+
+  <!-- Pi → Brain/Qdrant -->
+  <line x1="120" y1="135" x2="350" y2="330" stroke="#a78bfa" stroke-width="1.2" stroke-dasharray="5,3" marker-end="url(#arrow-violet)"/>
+  <text x="210" y="230" fill="#a78bfa" font-size="7" transform="rotate(30 210 230)">brain query / ingest</text>
+
+  <!-- SearXNG → Llama (LLM-enhanced search) -->
+  <line x1="195" y1="220" x2="420" y2="130" stroke="#22d3ee" stroke-width="1" stroke-dasharray="4,4" marker-end="url(#arrow-cyan)"/>
+  <text x="290" y="165" fill="#475569" font-size="7">llm re-rank</text>
+
+  <!-- Caddy → SearXNG -->
+  <line x1="540" y1="290" x2="195" y2="230" stroke="#34d399" stroke-width="1.2" marker-end="url(#arrow-green)"/>
+  <text x="340" y="250" fill="#475569" font-size="7">search.lan</text>
+
+  <!-- Caddy → Open-WebUI -->
+  <line x1="540" y1="320" x2="540" y2="380" stroke="#34d399" stroke-width="1.2" marker-end="url(#arrow-green)"/>
+  <text x="548" y="355" fill="#475569" font-size="7">openwebui.lan</text>
+
+  <!-- Caddy → Haven -->
+  <line x1="540" y1="340" x2="750" y2="290" stroke="#34d399" stroke-width="1.2" marker-end="url(#arrow-green)"/>
+  <text x="620" y="305" fill="#475569" font-size="7">haven.lan</text>
+
+  <!-- Caddy → AI Gateway -->
+  <line x1="540" y1="340" x2="750" y2="385" stroke="#34d399" stroke-width="1.2" marker-end="url(#arrow-green)"/>
+  <text x="620" y="365" fill="#475569" font-size="7">ai.lan</text>
+
+  <!-- Open-WebUI → Llama (zephyr) -->
+  <line x1="620" y1="410" x2="780" y2="140" stroke="#22d3ee" stroke-width="1.2" marker-end="url(#arrow-cyan)"/>
+  <text x="700" y="270" fill="#475569" font-size="7" transform="rotate(-55 700 270)">OpenAI /v1</text>
+
+  <!-- Open-WebUI → Llama (sentry) -->
+  <line x1="620" y1="410" x2="780" y2="230" stroke="#22d3ee" stroke-width="1.2" marker-end="url(#arrow-cyan)"/>
+  <text x="710" y="320" fill="#475569" font-size="7" transform="rotate(-40 710 320)">OpenAI /v1</text>
+
+  <!-- AI Gateway → Llama zephyr -->
+  <line x1="820" y1="385" x2="780" y2="140" stroke="#22d3ee" stroke-width="1" stroke-dasharray="4,3" marker-end="url(#arrow-cyan)"/>
+
+  <!-- AI Gateway → Qdrant -->
+  <line x1="820" y1="430" x2="820" y2="510" stroke="#a78bfa" stroke-width="1.2" marker-end="url(#arrow-violet)"/>
+  <text x="828" y="475" fill="#475569" font-size="7">RAG</text>
+
+  <!-- AI Gateway → Redis -->
+  <line x1="880" y1="430" x2="970" y2="510" stroke="#fb7185" stroke-width="1.2" marker-end="url(#arrow-rose)"/>
+  <text x="935" y="465" fill="#475569" font-size="7">cache</text>
+
+  <!-- Qdrant → Embedding -->
+  <line x1="820" y1="570" x2="820" y2="620" stroke="#a78bfa" stroke-width="1" stroke-dasharray="4,3" marker-end="url(#arrow-violet)"/>
+  <text x="828" y="600" fill="#475569" font-size="7">embed</text>
+
+  <!-- Haven → Redis -->
+  <line x1="860" y1="280" x2="1000" y2="510" stroke="#fb7185" stroke-width="1" stroke-dasharray="4,3" marker-end="url(#arrow-rose)"/>
+
+  <!-- SearXNG → Embedding -->
+  <line x1="195" y1="245" x2="770" y2="645" stroke="#a78bfa" stroke-width="1" stroke-dasharray="4,4" marker-end="url(#arrow-violet)"/>
+  <text x="450" y="440" fill="#475569" font-size="7">brain ingest</text>
+
+  <!-- Discovery script → pi config -->
+  <line x1="120" y1="55" x2="120" y2="80" stroke="#fbbf24" stroke-width="1" stroke-dasharray="3,3" marker-end="url(#arrow-amber)"/>
+  <text x="128" y="72" fill="#fbbf24" font-size="7">5min timer</text>
+
+  <!-- Discovery script → K8s API -->
+  <line x1="45" y1="55" x2="45" y2="290" stroke="#fbbf24" stroke-width="1" stroke-dasharray="3,3" marker-end="url(#arrow-amber)"/>
+  <text x="-10" y="180" fill="#fbbf24" font-size="7" transform="rotate(-90 10 180)">kubectl discover</text>
+
+  <!-- ============= NODE: ZEPHYR (10.1.1.110) ============= -->
+  <rect x="410" y="40" width="380" height="120" rx="10" fill="none" stroke="#fbbf24" stroke-width="1.5" stroke-dasharray="8,4"/>
+  <text x="420" y="56" fill="#fbbf24" font-size="9" font-weight="600">ZEPHYR 10.1.1.110 — Workstation</text>
+  <text x="420" y="67" fill="#64748b" font-size="7">31GB RAM &bull; RTX 3060 Ti 8GB + RTX 3090 24GB &bull; 89% disk</text>
+
+  <!-- Llama Server Zephyr -->
+  <rect x="420" y="76" width="175" height="52" rx="6" fill="#0f172a"/>
+  <rect x="420" y="76" width="175" height="52" rx="6" fill="rgba(8,51,68,0.4)" stroke="#22d3ee" stroke-width="1.5"/>
+  <text x="507" y="96" fill="#22d3ee" font-size="10" font-weight="600" text-anchor="middle">llama-server</text>
+  <text x="507" y="110" fill="#94a3b8" font-size="8" text-anchor="middle">Gemma-4 E4B IQ4_NL</text>
+  <text x="507" y="122" fill="#64748b" font-size="7" text-anchor="middle">RTX 3090 &bull; :1235 &bull; ~90 tok/s gen</text>
+
+  <!-- GPU Miner Zephyr -->
+  <rect x="610" y="76" width="170" height="52" rx="6" fill="#0f172a"/>
+  <rect x="610" y="76" width="170" height="52" rx="6" fill="rgba(251,146,60,0.2)" stroke="#fb923c" stroke-width="1.5"/>
+  <text x="695" y="96" fill="#fb923c" font-size="10" font-weight="600" text-anchor="middle">gpu-miner-zephyr</text>
+  <text x="695" y="110" fill="#94a3b8" font-size="8" text-anchor="middle">lolminer-nvidia</text>
+  <text x="695" y="122" fill="#64748b" font-size="7" text-anchor="middle">RTX 3060 Ti 8GB &bull; 100% util</text>
+
+  <!-- ============= NODE: SENTRY (10.1.1.140) ============= -->
+  <rect x="410" y="170" width="380" height="80" rx="10" fill="none" stroke="#fbbf24" stroke-width="1.5" stroke-dasharray="8,4"/>
+  <text x="420" y="186" fill="#fbbf24" font-size="9" font-weight="600">SENTRY 10.1.1.140 — Inference (ROCm)</text>
+  <text x="420" y="197" fill="#64748b" font-size="7">32GB RAM &bull; RX 5600 XT 6GB &bull; 74% disk</text>
+
+  <!-- Llama Server Sentry -->
+  <rect x="420" y="205" width="175" height="38" rx="6" fill="#0f172a"/>
+  <rect x="420" y="205" width="175" height="38" rx="6" fill="rgba(8,51,68,0.4)" stroke="#22d3ee" stroke-width="1.5"/>
+  <text x="507" y="222" fill="#22d3ee" font-size="10" font-weight="600" text-anchor="middle">llama-server</text>
+  <text x="507" y="235" fill="#94a3b8" font-size="8" text-anchor="middle">Gemma-4 E2B IQ4_NL &bull; RX 5600 XT &bull; :1235 &bull; ~58 tok/s gen</text>
+
+  <!-- GPU Idle indicator -->
+  <rect x="610" y="205" width="170" height="38" rx="6" fill="#0f172a"/>
+  <rect x="610" y="205" width="170" height="38" rx="6" fill="rgba(30,41,59,0.5)" stroke="#475569" stroke-width="1" stroke-dasharray="4,3"/>
+  <text x="695" y="222" fill="#475569" font-size="10" text-anchor="middle">GPU idle</text>
+  <text x="695" y="235" fill="#475569" font-size="8" text-anchor="middle">No mining on sentry</text>
+
+  <!-- ============= INGRESS (CADDY) ============= -->
+  <rect x="410" y="270" width="260" height="60" rx="6" fill="#0f172a"/>
+  <rect x="410" y="270" width="260" height="60" rx="6" fill="rgba(6,78,59,0.4)" stroke="#34d399" stroke-width="1.5"/>
+  <text x="540" y="293" fill="#34d399" font-size="11" font-weight="600" text-anchor="middle">Caddy Ingress Controller</text>
+  <text x="540" y="308" fill="#94a3b8" font-size="8" text-anchor="middle">4 routes: ai.lan / openwebui.lan / search.lan / haven.lan</text>
+  <text x="540" y="322" fill="#64748b" font-size="7" text-anchor="middle">2 replicas &bull; nexus + sentry</text>
+
+  <!-- NGINX (stale) -->
+  <rect x="690" y="278" width="100" height="44" rx="6" fill="#0f172a"/>
+  <rect x="690" y="278" width="100" height="44" rx="6" fill="rgba(30,41,59,0.3)" stroke="#475569" stroke-width="1" stroke-dasharray="4,3"/>
+  <text x="740" y="298" fill="#475569" font-size="9" text-anchor="middle">NGINX Ingress</text>
+  <text x="740" y="312" fill="#64748b" font-size="7" text-anchor="middle">evaluate removal</text>
+
+  <!-- ============= OPEN-WEBUI ============= -->
+  <rect x="430" y="380" width="220" height="55" rx="6" fill="#0f172a"/>
+  <rect x="430" y="380" width="220" height="55" rx="6" fill="rgba(8,51,68,0.4)" stroke="#22d3ee" stroke-width="1.5"/>
+  <text x="540" y="401" fill="#22d3ee" font-size="11" font-weight="600" text-anchor="middle">Open-WebUI v0.6.5</text>
+  <text x="540" y="416" fill="#94a3b8" font-size="8" text-anchor="middle">Chat frontend &bull; NodePort 32080</text>
+  <text x="540" y="429" fill="#64748b" font-size="7" text-anchor="middle">2 CPU / 4Gi RAM limit &bull; nexus</text>
+
+  <!-- ============= HAVEN (Hermes Dashboard) ============= -->
+  <rect x="710" y="255" width="200" height="55" rx="6" fill="#0f172a"/>
+  <rect x="710" y="255" width="200" height="55" rx="6" fill="rgba(6,78,59,0.4)" stroke="#34d399" stroke-width="1.5"/>
+  <text x="810" y="276" fill="#34d399" font-size="11" font-weight="600" text-anchor="middle">Haven v2.9.7</text>
+  <text x="810" y="291" fill="#94a3b8" font-size="8" text-anchor="middle">Hermes Agent Dashboard</text>
+  <text x="810" y="304" fill="#64748b" font-size="7" text-anchor="middle">hostNetwork :3000 &bull; nexus</text>
+
+  <!-- ============= AI INFERENCE GATEWAY (ConfigMap only) ============= -->
+  <rect x="710" y="380" width="200" height="55" rx="6" fill="#0f172a"/>
+  <rect x="710" y="380" width="200" height="55" rx="6" fill="rgba(30,41,59,0.5)" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="5,3"/>
+  <text x="810" y="401" fill="#94a3b8" font-size="10" font-weight="600" text-anchor="middle">AI Gateway Config</text>
+  <text x="810" y="416" fill="#64748b" font-size="8" text-anchor="middle">ConfigMap only (no deploy)</text>
+  <text x="810" y="429" fill="#64748b" font-size="7" text-anchor="middle">RAG + routing + rate-limit ready</text>
+
+  <!-- ============= QDRANT (Vector DB) ============= -->
+  <rect x="730" y="510" width="180" height="62" rx="6" fill="#0f172a"/>
+  <rect x="730" y="510" width="180" height="62" rx="6" fill="rgba(76,29,149,0.4)" stroke="#a78bfa" stroke-width="1.5"/>
+  <text x="820" y="531" fill="#a78bfa" font-size="11" font-weight="600" text-anchor="middle">Qdrant</text>
+  <text x="820" y="546" fill="#94a3b8" font-size="8" text-anchor="middle">Vector DB &bull; standalone</text>
+  <text x="820" y="559" fill="#64748b" font-size="7" text-anchor="middle">knowledge_base: 1297 pts &bull; brain-wiki: 348 pts</text>
+  <text x="820" y="570" fill="#64748b" font-size="7" text-anchor="middle">brain-sessions: 4 pts &bull; 384d cosine</text>
+
+  <!-- ============= EMBEDDING MODEL ============= -->
+  <rect x="730" y="620" width="180" height="38" rx="6" fill="#0f172a"/>
+  <rect x="730" y="620" width="180" height="38" rx="6" fill="rgba(76,29,149,0.25)" stroke="#a78bfa" stroke-width="1" stroke-dasharray="4,3"/>
+  <text x="820" y="637" fill="#a78bfa" font-size="9" font-weight="600" text-anchor="middle">Embedding Model</text>
+  <text x="820" y="650" fill="#64748b" font-size="7" text-anchor="middle">all-MiniLM-L6-v2 (384d)</text>
+
+  <!-- ============= REDIS ============= -->
+  <rect x="930" y="510" width="150" height="55" rx="6" fill="#0f172a"/>
+  <rect x="930" y="510" width="150" height="55" rx="6" fill="rgba(136,19,55,0.4)" stroke="#fb7185" stroke-width="1.5"/>
+  <text x="1005" y="531" fill="#fb7185" font-size="11" font-weight="600" text-anchor="middle">Redis</text>
+  <text x="1005" y="546" fill="#94a3b8" font-size="8" text-anchor="middle">Session cache</text>
+  <text x="1005" y="559" fill="#64748b" font-size="7" text-anchor="middle">127.0.0.1:6379 &bull; nexus only</text>
+
+  <!-- ============= PI (LOCAL) ============= -->
+  <rect x="20" y="75" width="180" height="60" rx="6" fill="#0f172a"/>
+  <rect x="20" y="75" width="180" height="60" rx="6" fill="rgba(6,78,59,0.4)" stroke="#34d399" stroke-width="1.5"/>
+  <text x="110" y="96" fill="#34d399" font-size="11" font-weight="600" text-anchor="middle">Pi (Coding Agent)</text>
+  <text x="110" y="111" fill="#94a3b8" font-size="8" text-anchor="middle">zephyr workstation</text>
+  <text x="110" y="124" fill="#64748b" font-size="7" text-anchor="middle">pi-web-access &bull; subagents</text>
+
+  <!-- ============= SEARXNG ============= -->
+  <rect x="20" y="190" width="180" height="55" rx="6" fill="#0f172a"/>
+  <rect x="20" y="190" width="180" height="55" rx="6" fill="rgba(251,146,60,0.3)" stroke="#fb923c" stroke-width="1.5"/>
+  <text x="110" y="211" fill="#fb923c" font-size="11" font-weight="600" text-anchor="middle">SearXNG</text>
+  <text x="110" y="226" fill="#94a3b8" font-size="8" text-anchor="middle">Meta-search engine</text>
+  <text x="110" y="239" fill="#64748b" font-size="7" text-anchor="middle">2 replicas &bull; :8080 &bull; nexus</text>
+
+  <!-- ============= DISCOVERY SCRIPT ============= -->
+  <rect x="20" y="35" width="180" height="28" rx="5" fill="#0f172a"/>
+  <rect x="20" y="35" width="180" height="28" rx="5" fill="rgba(251,191,36,0.15)" stroke="#fbbf24" stroke-width="1"/>
+  <text x="110" y="53" fill="#fbbf24" font-size="8" text-anchor="middle">discover-llama-endpoints.sh</text>
+
+  <!-- ============= MONITORING STACK ============= -->
+  <rect x="20" y="670" width="530" height="155" rx="10" fill="none" stroke="#fbbf24" stroke-width="1.5" stroke-dasharray="8,4"/>
+  <text x="30" y="688" fill="#fbbf24" font-size="9" font-weight="600">MONITORING STACK — sentry</text>
+
+  <!-- Grafana -->
+  <rect x="35" y="698" width="100" height="42" rx="5" fill="#0f172a"/>
+  <rect x="35" y="698" width="100" height="42" rx="5" fill="rgba(8,51,68,0.4)" stroke="#22d3ee" stroke-width="1.2"/>
+  <text x="85" y="715" fill="#22d3ee" font-size="9" font-weight="600" text-anchor="middle">Grafana</text>
+  <text x="85" y="730" fill="#64748b" font-size="7" text-anchor="middle">:3000 &bull; 10Gi</text>
+
+  <!-- Prometheus -->
+  <rect x="150" y="698" width="100" height="42" rx="5" fill="#0f172a"/>
+  <rect x="150" y="698" width="100" height="42" rx="5" fill="rgba(251,146,60,0.3)" stroke="#fb923c" stroke-width="1.2"/>
+  <text x="200" y="715" fill="#fb923c" font-size="9" font-weight="600" text-anchor="middle">Prometheus</text>
+  <text x="200" y="730" fill="#64748b" font-size="7" text-anchor="middle">:9090</text>
+
+  <!-- Loki -->
+  <rect x="265" y="698" width="100" height="42" rx="5" fill="#0f172a"/>
+  <rect x="265" y="698" width="100" height="42" rx="5" fill="rgba(6,78,59,0.4)" stroke="#34d399" stroke-width="1.2"/>
+  <text x="315" y="715" fill="#34d399" font-size="9" font-weight="600" text-anchor="middle">Loki</text>
+  <text x="315" y="730" fill="#64748b" font-size="7" text-anchor="middle">:3100 &bull; 50Gi</text>
+
+  <!-- Mimir -->
+  <rect x="380" y="698" width="100" height="42" rx="5" fill="#0f172a"/>
+  <rect x="380" y="698" width="100" height="42" rx="5" fill="rgba(76,29,149,0.4)" stroke="#a78bfa" stroke-width="1.2"/>
+  <text x="430" y="715" fill="#a78bfa" font-size="9" font-weight="600" text-anchor="middle">Mimir</text>
+  <text x="430" y="730" fill="#64748b" font-size="7" text-anchor="middle">:9009 &bull; 100Gi</text>
+
+  <!-- Tempo -->
+  <rect x="35" y="752" width="100" height="42" rx="5" fill="#0f172a"/>
+  <rect x="35" y="752" width="100" height="42" rx="5" fill="rgba(136,19,55,0.4)" stroke="#fb7185" stroke-width="1.2"/>
+  <text x="85" y="769" fill="#fb7185" font-size="9" font-weight="600" text-anchor="middle">Tempo</text>
+  <text x="85" y="784" fill="#64748b" font-size="7" text-anchor="middle">:3200 &bull; 50Gi</text>
+
+  <!-- KSM -->
+  <rect x="150" y="752" width="100" height="42" rx="5" fill="#0f172a"/>
+  <rect x="150" y="752" width="100" height="42" rx="5" fill="rgba(30,41,59,0.5)" stroke="#94a3b8" stroke-width="1.2"/>
+  <text x="200" y="769" fill="#94a3b8" font-size="9" font-weight="600" text-anchor="middle">kube-state</text>
+  <text x="200" y="784" fill="#64748b" font-size="7" text-anchor="middle">metrics</text>
+
+  <!-- Alloy Daemons -->
+  <rect x="265" y="752" width="215" height="42" rx="5" fill="#0f172a"/>
+  <rect x="265" y="752" width="215" height="42" rx="5" fill="rgba(251,191,36,0.15)" stroke="#fbbf24" stroke-width="1.2"/>
+  <text x="372" y="769" fill="#fbbf24" font-size="9" font-weight="600" text-anchor="middle">Grafana Alloy (DaemonSet)</text>
+  <text x="372" y="784" fill="#64748b" font-size="7" text-anchor="middle">4 pods: zephyr, nexus, forge, sentry</text>
+
+  <!-- ============= MINING CLUSTER ============= -->
+  <rect x="580" y="670" width="690" height="155" rx="10" fill="none" stroke="#fb923c" stroke-width="1.5" stroke-dasharray="8,4"/>
+  <text x="590" y="688" fill="#fb923c" font-size="9" font-weight="600">MINING CLUSTER</text>
+
+  <!-- Forge GPU 0 -->
+  <rect x="595" y="698" width="150" height="52" rx="5" fill="#0f172a"/>
+  <rect x="595" y="698" width="150" height="52" rx="5" fill="rgba(251,146,60,0.2)" stroke="#fb923c" stroke-width="1.2"/>
+  <text x="670" y="715" fill="#fb923c" font-size="9" font-weight="600" text-anchor="middle">gpu-miner-forge-nvidia-0</text>
+  <text x="670" y="729" fill="#94a3b8" font-size="7" text-anchor="middle">RTX 4060 8GB &bull; 100%</text>
+  <text x="670" y="741" fill="#64748b" font-size="7" text-anchor="middle">forge</text>
+
+  <!-- Forge GPU 1 -->
+  <rect x="760" y="698" width="150" height="52" rx="5" fill="#0f172a"/>
+  <rect x="760" y="698" width="150" height="52" rx="5" fill="rgba(251,146,60,0.2)" stroke="#fb923c" stroke-width="1.2"/>
+  <text x="835" y="715" fill="#fb923c" font-size="9" font-weight="600" text-anchor="middle">gpu-miner-forge-nvidia-1</text>
+  <text x="835" y="729" fill="#94a3b8" font-size="7" text-anchor="middle">RTX 4060 8GB &bull; 100%</text>
+  <text x="835" y="741" fill="#64748b" font-size="7" text-anchor="middle">forge</text>
+
+  <!-- Nexus GPU -->
+  <rect x="925" y="698" width="150" height="52" rx="5" fill="#0f172a"/>
+  <rect x="925" y="698" width="150" height="52" rx="5" fill="rgba(251,146,60,0.2)" stroke="#fb923c" stroke-width="1.2"/>
+  <text x="1000" y="715" fill="#fb923c" font-size="9" font-weight="600" text-anchor="middle">gpu-miner-nexus</text>
+  <text x="1000" y="729" fill="#94a3b8" font-size="7" text-anchor="middle">RTX 3060 Ti 8GB &bull; 100%</text>
+  <text x="1000" y="741" fill="#64748b" font-size="7" text-anchor="middle">nexus</text>
+
+  <!-- xmrig nexus -->
+  <rect x="1090" y="698" width="170" height="52" rx="5" fill="#0f172a"/>
+  <rect x="1090" y="698" width="170" height="52" rx="5" fill="rgba(251,146,60,0.15)" stroke="#fb923c" stroke-width="1"/>
+  <text x="1175" y="715" fill="#fb923c" font-size="9" font-weight="600" text-anchor="middle">xmrig-nexus</text>
+  <text x="1175" y="729" fill="#94a3b8" font-size="7" text-anchor="middle">CPU mining</text>
+  <text x="1175" y="741" fill="#64748b" font-size="7" text-anchor="middle">nexus</text>
+
+  <!-- xmrig zephyr -->
+  <rect x="595" y="762" width="150" height="42" rx="5" fill="#0f172a"/>
+  <rect x="595" y="762" width="150" height="42" rx="5" fill="rgba(251,146,60,0.15)" stroke="#fb923c" stroke-width="1"/>
+  <text x="670" y="779" fill="#fb923c" font-size="9" font-weight="600" text-anchor="middle">xmrig-zephyr</text>
+  <text x="670" y="793" fill="#64748b" font-size="7" text-anchor="middle">CPU mining &bull; zephyr</text>
+
+  <!-- xmrig-proxy -->
+  <rect x="760" y="762" width="150" height="42" rx="5" fill="#0f172a"/>
+  <rect x="760" y="762" width="150" height="42" rx="5" fill="rgba(251,146,60,0.15)" stroke="#fb923c" stroke-width="1"/>
+  <text x="835" y="779" fill="#fb923c" font-size="9" font-weight="600" text-anchor="middle">xmrig-proxy</text>
+  <text x="835" y="793" fill="#64748b" font-size="7" text-anchor="middle">stratum proxy &bull; nexus</text>
+
+  <!-- ============= NODE SUMMARY BAR ============= -->
+  <rect x="20" y="850" width="1260" height="90" rx="8" fill="rgba(30,41,59,0.3)" stroke="#1e293b" stroke-width="1"/>
+
+  <!-- Zephyr -->
+  <rect x="35" y="860" width="280" height="70" rx="6" fill="rgba(30,41,59,0.5)" stroke="#334155" stroke-width="1"/>
+  <text x="175" y="880" fill="#e2e8f0" font-size="10" font-weight="600" text-anchor="middle">ZEPHYR &bull; 10.1.1.110</text>
+  <text x="175" y="895" fill="#94a3b8" font-size="8" text-anchor="middle">Workstation &bull; Control Plane &bull; 31GB RAM</text>
+  <text x="175" y="910" fill="#64748b" font-size="7" text-anchor="middle">RTX 3060 Ti 8GB (mining) + RTX 3090 24GB (AI) &bull; 89% disk</text>
+  <text x="175" y="923" fill="#64748b" font-size="7" text-anchor="middle">etcd &bull; api-server &bull; scheduler &bull; llama-server &bull; pi &bull; alloy</text>
+
+  <!-- Nexus -->
+  <rect x="330" y="860" width="280" height="70" rx="6" fill="rgba(30,41,59,0.5)" stroke="#334155" stroke-width="1"/>
+  <text x="470" y="880" fill="#e2e8f0" font-size="10" font-weight="600" text-anchor="middle">NEXUS &bull; 10.1.1.120</text>
+  <text x="470" y="895" fill="#94a3b8" font-size="8" text-anchor="middle">Primary Server &bull; 46GB RAM &bull; 37% disk</text>
+  <text x="470" y="910" fill="#64748b" font-size="7" text-anchor="middle">RTX 3060 Ti 8GB (mining) &bull; Qdrant &bull; Redis &bull; SearXNG &bull; Haven</text>
+  <text x="470" y="923" fill="#64748b" font-size="7" text-anchor="middle">Caddy &bull; NGINX &bull; Open-WebUI &bull; nix-cache &bull; alloy &bull; miners</text>
+
+  <!-- Forge -->
+  <rect x="625" y="860" width="280" height="70" rx="6" fill="rgba(30,41,59,0.5)" stroke="#334155" stroke-width="1"/>
+  <text x="765" y="880" fill="#e2e8f0" font-size="10" font-weight="600" text-anchor="middle">FORGE &bull; 10.1.1.130</text>
+  <text x="765" y="895" fill="#94a3b8" font-size="8" text-anchor="middle">GPU Computing &bull; 16GB RAM &bull; 81% disk</text>
+  <text x="765" y="910" fill="#64748b" font-size="7" text-anchor="middle">2x RTX 4060 8GB (mining) &bull; Mining only</text>
+  <text x="765" y="923" fill="#64748b" font-size="7" text-anchor="middle">gpu-miner-forge-nvidia-0/1 &bull; alloy</text>
+
+  <!-- Sentry -->
+  <rect x="920" y="860" width="280" height="70" rx="6" fill="rgba(30,41,59,0.5)" stroke="#334155" stroke-width="1"/>
+  <text x="1060" y="880" fill="#e2e8f0" font-size="10" font-weight="600" text-anchor="middle">SENTRY &bull; 10.1.1.140</text>
+  <text x="1060" y="895" fill="#94a3b8" font-size="8" text-anchor="middle">Inference (ROCm) &bull; 32GB RAM &bull; 74% disk</text>
+  <text x="1060" y="910" fill="#64748b" font-size="7" text-anchor="middle">RX 5600 XT 6GB (AI) &bull; Monitoring: Grafana/Loki/Mimir/Tempo</text>
+  <text x="1060" y="923" fill="#64748b" font-size="7" text-anchor="middle">llama-server &bull; Caddy replica &bull; alloy &bull; kube-state-metrics</text>
+
+  <!-- ============= LEGEND ============= -->
+  <rect x="20" y="848" width="1260" height="2" fill="#1e293b"/>
+
+</svg>
+</div>
+
+<!-- Summary Cards -->
+<div class="cards">
+  <div class="card">
+    <div class="card-header">
+      <div class="card-dot" style="background:#22d3ee"></div>
+      <h3>GPU Inference</h3>
+    </div>
+    <ul>
+      <li><strong>Zephyr:</strong> Gemma-4 E4B IQ4_NL on RTX 3090</li>
+      <li>&bull; ~1000 tok/s prompt, ~90 tok/s generation</li>
+      <li><strong>Sentry:</strong> Gemma-4 E2B IQ4_NL on RX 5600 XT</li>
+      <li>&bull; ~300 tok/s prompt, ~58 tok/s generation</li>
+      <li>&bull; 128k context, llama.cpp b8781, hostNetwork :1235</li>
+    </ul>
+  </div>
+  <div class="card">
+    <div class="card-header">
+      <div class="card-dot" style="background:#a78bfa"></div>
+      <h3>Brain / Knowledge</h3>
+    </div>
+    <ul>
+      <li><strong>Qdrant:</strong> standalone on nexus:6333</li>
+      <li>&bull; knowledge_base: 1,297 pts, brain-wiki: 348 pts</li>
+      <li><strong>Embedding:</strong> all-MiniLM-L6-v2 (384d, cosine)</li>
+      <li><strong>Pi brain:</strong> query/ingest via pi-web-access</li>
+      <li>&bull; Dynamic endpoint discovery every 5min</li>
+    </ul>
+  </div>
+  <div class="card">
+    <div class="card-header">
+      <div class="card-dot" style="background:#fb923c"></div>
+      <h3>Known Issues</h3>
+    </div>
+    <ul>
+      <li>&bull; AI Gateway: ConfigMap only, no deployment</li>
+      <li>&bull; nvidia.com/gpu: kubectl patch workaround</li>
+      <li>&bull; NGINX ingress: evaluate for removal</li>
+      <li>&bull; Zephyr disk: 89% (130GB AI caches)</li>
+      <li>&bull; Legacy systemd miners still on zephyr</li>
+    </ul>
+  </div>
+</div>
+
+<div class="footer">
+  Generated 2026-04-16 &bull; K3s v1.34.5+k3s1 &bull; NixOS 26.05 &bull; Flannel CNI &bull; easykubenix + kluctl &bull; 34 pods running
+</div>
+
+</div>
+</body>
+</html>
